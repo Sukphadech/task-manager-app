@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
+
 # -------------------------
 # Task Schemas
 # -------------------------
@@ -20,12 +22,13 @@ class TaskResponse(BaseModel):
     class Config:
         from_attributes = True   
 
-# Schema สำหรับสร้าง Board (ไม่ต้องใส่ id)
+# -------------------------
+# Board Schemas
+# -------------------------
 class BoardCreate(BaseModel):
     title: str
-    owner_id: int
 
-# Schema สำหรับ Response (มี id)
+
 class BoardResponse(BaseModel):
     id: int
     title: str
@@ -34,3 +37,20 @@ class BoardResponse(BaseModel):
     class Config:
         class Config:
             from_attributes = True
+
+# -------------------------
+# User Schemas
+# -------------------------
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+ 
+class UserOut(BaseModel):
+    id: int
+    username: str
+    email: str
+
+    class Config:
+        from_attributes = True
+

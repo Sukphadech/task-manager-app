@@ -8,8 +8,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from database import get_db
-
-
+from auth import router as auth_router
+from board import router as boards_router
+from auth import router as auth_router
+from auth import get_current_user
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./taskmanager.db"
 
@@ -26,8 +28,8 @@ models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
-
-
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(boards_router, prefix="/boards", tags=["boards"])
 # -----------------------------
 # Models (Pydantic)
 # -----------------------------
@@ -119,12 +121,17 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
 ####################Board#######################
 ################################################
 @app.post("/boards", response_model=schemas.BoardResponse)
-def create_board(board: schemas.BoardCreate, db: Session = Depends(get_db)):
-    db_board = models.Board(title=board.title, owner_id=board.owner_id)
+def create_board(
+    board: schemas.BoardCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)  # ✅ ต้องอยู่ในฟังก์ชัน
+):
+    db_board = models.Board(title=board.title, owner_id=current_user.id)
     db.add(db_board)
     db.commit()
     db.refresh(db_board)
     return db_board
+
 
 @app.get("/boards", response_model=list[schemas.BoardResponse])
 def get_boards(db: Session = Depends(get_db)):
@@ -146,3 +153,6 @@ def delete_board(board_id: int):
             boards.pop(i)
             return {"message": f"Board {board_id} deleted successfully"}
     raise HTTPException(status_code=404, detail="Board not found")
+
+# รวม route ของ auth
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
